@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-# Classe principal
-class Transformer(nn.Module):
+# Positional Embedding
+class PosEmbeding(nn.Module):
     def __init__(self, seq, d_model):
         super().__init__()
         self.seq = seq

@@ -1,35 +1,7 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import math
-
-# Attention Mecanism
-class SelfAttention(nn.Module):
-    def __init__(self, seq_len, d_model, causal=False):
-        super().__init__()
-
-        self.W_Q = nn.Linear(d_model, d_model, bias=False)
-        self.W_K = nn.Linear(d_model, d_model, bias=False)
-        self.W_V = nn.Linear(d_model, d_model, bias=False)
-        self.causal = causal
-        self.register_buffer('mask', torch.tril(torch.ones(seq_len, seq_len)))
-
-    def scaled_dot_product_attention(self, x):
-
-        Q, K, V = self.W_Q(x), self.W_K(x), self.W_V(x)
-        scores  = (Q @ K.transpose(-2,-1)) / math.sqrt(Q.shape[-1])
-
-        
-
-        if self.causal:
-
-            scores.masked_fill(self.mask == 0, float('-inf'))
-            weight = torch.softmax(self.mask, dim=-1)
-
-        else:
-
-            weight = torch.softmax(scores, dim=-1)
-
-        return weight @ V
     
 # Multi-Head-Attention Mecanism
 class QKVAttention(nn.Module):
@@ -53,7 +25,7 @@ class QKVAttention(nn.Module):
         self.W_V = nn.Linear(d_model, d_model, bias=False)
         self.W_O = nn.Linear(d_model, d_model, bias=False)
 
-    def MultiHeadAttention(self, x):
+    def forward(self, x):
 
         Q, K, V = self.W_Q(x), self.W_K(x), self.W_V(x)
 
@@ -71,3 +43,19 @@ class QKVAttention(nn.Module):
 
 
         return self.W_O(weight).squeeze(0)
+    
+
+class FeedForward(nn.module):
+    def __init__(self, seq, hidden_size, dropout:float=0.1):
+        super().__init__()
+
+        self.f1 = nn.Linear(seq, hidden_size)
+        self.dropout = nn.Dropout(dropout)
+        self.f2 = nn.Linear(hidden_size, seq)
+        
+    def forward(self, x):
+        x = self.f1(x)
+        x = F.relu(x) # Considerar usar outra função de ativação
+        x = self.dropout(x)
+        x = self.f2(x)
+        return x
