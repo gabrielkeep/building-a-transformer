@@ -45,7 +45,7 @@ class QKVAttention(nn.Module):
         return self.W_O(weight).squeeze(0)
     
 
-class FeedForward(nn.module):
+class FeedForward(nn.Module):
     def __init__(self, seq, hidden_size, dropout:float=0.1):
         super().__init__()
 
