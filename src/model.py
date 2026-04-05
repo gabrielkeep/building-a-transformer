@@ -2,7 +2,7 @@ from attention_mechanism import QKVAttention, FeedForward
 from positional_embedding import PosEmbeding
 import torch.nn as nn
 
-class TransformerBlock(nn.Module):
+class DecoderBlock(nn.Module):
     def __init__(self, max_seq_len, d_model, n_heads):
         super().__init__()
 
@@ -10,12 +10,12 @@ class TransformerBlock(nn.Module):
         self.masked_multi_head_attention = QKVAttention(
             d_model = d_model,
             h = n_heads,
-            s = max_seq_len,
+            seq = max_seq_len,
             causal = True 
         )
 
         # Defining FeedForward (applies a layer normalization)
-        self.ff = FeedForward(
+        self.masked_multi_head_attention = FeedForward(
             seq = max_seq_len,
             hidden_size = 4 * d_model
         )
@@ -36,7 +36,7 @@ class TransformerBlock(nn.Module):
 
 
 
-class Transformer(nn.Module):
+class Decoder(nn.Module):
     def __init__(self, max_seq_len, vocab_size, embeding_dim, n_layers, d_model, n_heads):
         super().__init__()
 
@@ -45,27 +45,34 @@ class Transformer(nn.Module):
         self.pos_embeding = PosEmbeding(
             seq = max_seq_len,
             d_model = embeding_dim
-        )
+        ).pe
 
         self.blocks = nn.ModuleList()
         for _ in range(n_layers):
             self.blocks.append(
-                TransformerBlock(
+                DecoderBlock(
                     d_model = d_model,
-                    h = n_heads,
-                    s = max_seq_len,
-                    causal=True # True if Masked
+                    n_heads = n_heads,
+                    max_seq_len = max_seq_len,
+                    #causal=True # True if Masked
                 )
             )
 
+        self.linear = nn.Linear(d_model, d_model)
+        self.softmax = nn.Softmax(dim=-1)
+
     def forward(self, x):
 
-        self.input_embedding = self.embeding(x)
+        input_embedding = self.embeding(x)
 
-        self.positional_embedding = (self.input_embedding + self.pos_embeding().pe)
+        positional_embedding = (input_embedding + self.pos_embeding)
 
         for transformer_block in self.blocks:
-            x = transformer_block(self.positional_embedding)
+            x = transformer_block(positional_embedding)
 
-        return x
+        logits = self.linear(x)
+
+        prob = self.softmax(logits)
+    
+        return prob
 
