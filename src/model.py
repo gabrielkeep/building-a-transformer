@@ -63,5 +63,5 @@ class Transformer(nn.Module):
         self.input_embedding = self.embeding(x)
         self.positional_embedding = (self.input_embedding + self.pos_embeding().pe)
 
-        return self.positional_embedding
+        return self.positional_embedding, self.input_embedding
 
