@@ -1,5 +1,5 @@
-from .attention_mechanism import QKVAttention, FeedForward
-from .positional_embedding import PosEmbeding
+from attention_mechanism import QKVAttention, FeedForward
+from positional_embedding import PosEmbeding
 import torch.nn as nn
 
 class TransformerBlock(nn.Module):
@@ -7,7 +7,7 @@ class TransformerBlock(nn.Module):
         super().__init__()
 
         # Defining Masked Multi Head Attetion
-        self.mmha = QKVAttention(
+        self.masked_multi_head_attention = QKVAttention(
             d_model = d_model,
             h = n_heads,
             s = max_seq_len,
@@ -20,17 +20,17 @@ class TransformerBlock(nn.Module):
             hidden_size = 4 * d_model
         )
 
-        self.add_norm = nn.LayerNorm(d_model)
+        self.skip_connection_normalization = nn.LayerNorm(d_model)
 
     def forward(self, x):
 
         res = x 
-        x = self.mmha(x) # Masked Multi Head Attention
-        x = self.add_norm(x + res) # Layer Normalization
+        x = self.masked_multi_head_attention(x) # Masked Multi Head Attention
+        x = self.skip_connection_normalization(x + res) # Layer Normalization
         
         res = x 
-        x = self.ff(x) # Feed Forward
-        x = self.add_norm(x + res) # Residual + Layer Norm
+        x = self.masked_multi_head_attention(x) # Feed Forward
+        x = self.skip_connection_normalization(x + res) # Residual + Layer Norm
 
         return x
 
@@ -61,7 +61,11 @@ class Transformer(nn.Module):
     def forward(self, x):
 
         self.input_embedding = self.embeding(x)
+
         self.positional_embedding = (self.input_embedding + self.pos_embeding().pe)
 
-        return self.positional_embedding, self.input_embedding
+        for transformer_block in self.blocks:
+            x = transformer_block(self.positional_embedding)
+
+        return x
 
