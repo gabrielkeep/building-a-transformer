@@ -10,11 +10,11 @@ class PosEmbeding(nn.Module):
         self.seq = seq
         self.d_model = d_model
 
-        pe = self.sinusoid_function()
+        pe = self.forward()
         self.register_buffer('pe', pe)
 
 # Positional Embedding Function
-    def sinusoid_function(self):
+    def forward(self):
 
         pe = torch.zeros((self.seq, self.d_model))
         

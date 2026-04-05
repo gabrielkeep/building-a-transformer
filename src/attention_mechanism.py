@@ -2,21 +2,21 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-    
-# Multi-Head-Attention Mecanism
+
+# Attention Mecanism    
 class QKVAttention(nn.Module):
-    def __init__(self, d_model, h, s, causal=False):
+    def __init__(self, d_model, h, seq, causal=False):
         super().__init__()
 
         self.h = h
         self.reduced_dimension = d_model // h
-        self.seq = s
+        self.seq = seq
         self.d_model = d_model
         self.batch = 1 # Posso tornar isso dinâmico
         self.causal = causal
 
         if causal:
-            self.register_buffer('mask', torch.tril(torch.ones(s, s)))
+            self.register_buffer('mask', torch.tril(torch.ones(self.seq, self.seq)))
         else:
             self.mask = None
 
