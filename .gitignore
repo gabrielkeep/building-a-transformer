@@ -3,6 +3,11 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Ignorar arquivo de pesos do pytorch
+*.pt
+*.pth
+checkpoint_pause.pth
+
 # C extensions
 *.so
 
