@@ -61,7 +61,7 @@ class Transformer(nn.Module):
                 )
             )
 
-        self.linear = nn.Linear(d_model, d_model)
+        self.linear = nn.Linear(d_model, vocab_size)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
@@ -75,7 +75,7 @@ class Transformer(nn.Module):
 
         logits = self.linear(x)
 
-        prob = self.softmax(logits)
+        #prob = self.softmax(logits)
     
-        return prob
+        return logits
 
