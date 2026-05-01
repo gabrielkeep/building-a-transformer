@@ -1,8 +1,8 @@
-from attention_mechanism import QKVAttention, FeedForward
-from positional_embedding import PosEmbeding
+from src.attention_mechanism import QKVAttention, FeedForward
+from src.positional_embedding import PosEmbeding
 import torch.nn as nn
 
-class DecoderBlock(nn.Module):
+class TransformerBlock(nn.Module):
     def __init__(self, max_seq_len, d_model, n_heads):
         super().__init__()
 
@@ -36,21 +36,24 @@ class DecoderBlock(nn.Module):
 
 
 
-class Decoder(nn.Module):
+class Transformer(nn.Module):
     def __init__(self, max_seq_len, vocab_size, embeding_dim, n_layers, d_model, n_heads):
         super().__init__()
 
-        self.embeding = nn.Embedding(vocab_size, embeding_dim)
+        self.embeding = nn.Embedding(
+            vocab_size,
+            embeding_dim
+        )
         
         self.pos_embeding = PosEmbeding(
-            seq = max_seq_len,
-            d_model = embeding_dim
+            max_seq_length = max_seq_len,
+            embedding_dim = embeding_dim
         ).pe
 
         self.blocks = nn.ModuleList()
         for _ in range(n_layers):
             self.blocks.append(
-                DecoderBlock(
+                TransformerBlock(
                     d_model = d_model,
                     n_heads = n_heads,
                     max_seq_len = max_seq_len,
