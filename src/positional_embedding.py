@@ -5,10 +5,10 @@ import math
 
 # Positional Embedding
 class PosEmbeding(nn.Module):
-    def __init__(self, seq, d_model):
+    def __init__(self, max_seq_length, embedding_dim):
         super().__init__()
-        self.seq = seq
-        self.d_model = d_model
+        self.max_seq_length = max_seq_length
+        self.embedding_dim = embedding_dim
 
         pe = self.forward()
         self.register_buffer('pe', pe)
@@ -16,13 +16,13 @@ class PosEmbeding(nn.Module):
 # Positional Embedding Function
     def forward(self):
 
-        pe = torch.zeros((self.seq, self.d_model))
+        pe = torch.zeros((self.max_seq_length, self.embedding_dim))
         
 
-        for pos in range(self.seq):
-            for i in range(0, self.d_model, 2):
-                pe[pos, i] = math.sin(pos / 10_000 ** (i/self.d_model))
-                pe[pos, i+1] = math.cos(pos / 10_000 ** (i/self.d_model))
+        for pos in range(self.max_seq_length):
+            for i in range(0, self.embedding_dim, 2):
+                pe[pos, i] = math.sin(pos / 10_000 ** (i/self.embedding_dim))
+                pe[pos, i+1] = math.cos(pos / 10_000 ** (i/self.embedding_dim))
 
         return pe
     
