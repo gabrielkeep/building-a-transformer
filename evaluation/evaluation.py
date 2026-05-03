@@ -2,7 +2,7 @@ from src.model import Transformer
 from tokenizador.tokenizer import Tokenizer
 import torch
 
-tkn = Tokenizer("How does neural network work?")
+tkn = Tokenizer("neural network")
 input_ids, vocab_size = tkn.forward()
 
 model = Transformer(

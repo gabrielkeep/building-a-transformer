@@ -5,7 +5,7 @@ from src.model import Transformer
 from tokenizador.tokenizer import Tokenizer
 
 
-EPOCHS = 100
+EPOCHS = 1000
 LEARNING_RATE = 1e-4
 
 
