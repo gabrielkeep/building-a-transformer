@@ -26,32 +26,32 @@ class QKVAttention(nn.Module):
         self.W_O = nn.Linear(d_model, d_model, bias=False)
 
     def forward(self, x):
+        B, T, C =x.shape
 
         Q, K, V = self.W_Q(x), self.W_K(x), self.W_V(x)
 
-        Q_i = Q.reshape(self.batch, self.seq, self.h, self.reduced_dimension).transpose(1, 2)
-        K_i = K.reshape(self.batch, self.seq, self.h, self.reduced_dimension).transpose(1, 2)
-        V_i = V.reshape(self.batch, self.seq, self.h, self.reduced_dimension).transpose(1, 2)
+        Q_i = Q.reshape(B, T, self.h, self.reduced_dimension).transpose(1, 2)
+        K_i = K.reshape(B, T, self.h, self.reduced_dimension).transpose(1, 2)
+        V_i = V.reshape(B, T, self.h, self.reduced_dimension).transpose(1, 2)
 
         score = (Q_i @ K_i.transpose(-2, -1)) / math.sqrt(self.reduced_dimension)
 
         if self.causal:        
-            score = score.masked_fill(self.mask == 0, float('-inf'))
+            score = score.masked_fill(self.mask[:T, :T] == 0, float('-inf'))
    
         weight = F.softmax(score, dim=-1) @ V_i
-        weight = weight.transpose(1, 2).contiguous().view(self.batch, self.seq, self.d_model)
+        weight = weight.transpose(1, 2).contiguous().view(B, T, self.d_model)
 
-
-        return self.W_O(weight).squeeze(0)
+        return self.W_O(weight)
     
 
 class FeedForward(nn.Module):
-    def __init__(self, seq, hidden_size, dropout:float=0.1):
+    def __init__(self, d_model, hidden_size, dropout:float=0.1):
         super().__init__()
 
-        self.f1 = nn.Linear(seq, hidden_size)
+        self.f1 = nn.Linear(d_model, hidden_size)
         self.dropout = nn.Dropout(dropout)
-        self.f2 = nn.Linear(hidden_size, seq)
+        self.f2 = nn.Linear(hidden_size, d_model)
         
     def forward(self, x):
         x = self.f1(x)

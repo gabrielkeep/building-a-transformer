@@ -6,7 +6,7 @@ class TransformerBlock(nn.Module):
     def __init__(self, max_seq_len, d_model, n_heads):
         super().__init__()
 
-        # Defining Masked Multi Head Attetion
+        # Defining Masked Multi Head Attention
         self.masked_multi_head_attention = QKVAttention(
             d_model = d_model,
             h = n_heads,
@@ -14,23 +14,21 @@ class TransformerBlock(nn.Module):
             causal = True 
         )
 
-        # Defining FeedForward (applies a layer normalization)
-        self.masked_multi_head_attention = FeedForward(
-            seq = max_seq_len,
+        # Defining FeedForward
+        self.feed_forward = FeedForward(
+            d_model = d_model,
             hidden_size = 4 * d_model
         )
 
-        self.skip_connection_normalization = nn.LayerNorm(d_model)
+        self.ln1 = nn.LayerNorm(d_model)
+        self.ln2 = nn.LayerNorm(d_model)
 
     def forward(self, x):
-
-        res = x 
-        x = self.masked_multi_head_attention(x) # Masked Multi Head Attention
-        x = self.skip_connection_normalization(x + res) # Layer Normalization
+        # Pre-Layer Norm for Attention
+        x = x + self.masked_multi_head_attention(self.ln1(x))
         
-        res = x 
-        x = self.masked_multi_head_attention(x) # Feed Forward
-        x = self.skip_connection_normalization(x + res) # Residual + Layer Norm
+        # Pre-Layer Norm for Feed Forward
+        x = x + self.feed_forward(self.ln2(x))
 
         return x
 
@@ -61,21 +59,26 @@ class Transformer(nn.Module):
                 )
             )
 
+        self.ln_f = nn.LayerNorm(d_model)
         self.linear = nn.Linear(d_model, vocab_size)
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x):
 
-        input_embedding = self.embeding(x)
+        # Embedding
+        x = self.embeding(x)
 
-        positional_embedding = (input_embedding + self.pos_embeding)
+        # Positional Embedding
+        seq_len = x.size(1)
+        x = (x + self.pos_embeding[:seq_len, :])
 
+        # Transformer Blocks
         for transformer_block in self.blocks:
-            x = transformer_block(positional_embedding)
+            x = transformer_block(x)
 
+        # Final Layer Norm and Linear Layer
+        x = self.ln_f(x)
         logits = self.linear(x)
-
-        #prob = self.softmax(logits)
     
         return logits
 
